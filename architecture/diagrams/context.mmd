@@ -1,0 +1,26 @@
+flowchart LR
+    client[Client / Browser / Mobile]
+    gateway[API Gateway<br/>FastAPI]
+    auth[Auth Service<br/>FastAPI]
+    events[Events Service<br/>FastAPI]
+    booking[Booking Service<br/>Go]
+    notification[Notification Service<br/>Go]
+    kafka[(Kafka)]
+    consul[(Consul<br/>service registry)]
+    vault[(Vault<br/>secrets)]
+
+    client -->|HTTP REST| gateway
+    gateway -->|sync HTTP| auth
+    gateway -->|sync HTTP| events
+    gateway -->|sync HTTP| booking
+    events -->|sync HTTP token verify| auth
+    booking -->|sync HTTP token verify| auth
+    booking -->|sync HTTP event lookup| events
+    booking -->|booking.created| kafka
+    kafka -->|consume booking.created| notification
+    auth --> vault
+    gateway -. register/health .-> consul
+    auth -. register/health .-> consul
+    events -. register/health .-> consul
+    booking -. register/health .-> consul
+    notification -. register/health .-> consul
